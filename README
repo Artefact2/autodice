@@ -1,5 +1,5 @@
-autofairdice
-============
+autodice
+========
 
 A computer vision tool to read the result of a dice roll. Released
 under the WTFPLv2.
@@ -27,7 +27,7 @@ similar radius and that are close to the center of the die.
 Usage
 =====
 
-## `./autofairdice.py autocrop <in.png> <out.png>`
+## `./autodice.py autocrop <in.png> <out.png>`
 
 Autocrop an image using Canny edge detection. All images must be
 cropped this way to ensure consistent positioning of the die in the
@@ -37,22 +37,22 @@ picture.
 --- | --- | ---
 Original picture | After edge detection | Autocrop result
 
-## `./autofairdice.py autocrop-test <in.png>`
+## `./autodice.py autocrop-test <in.png>`
 
 Autocrop an image and display the result instead of saving it. Useful
 for debugging and tweaking with the threshold values of the edge
 detection algorithm.
 
-## `./autofairdice.py match-test <A.png> <B.png>`
+## `./autodice.py match-test <A.png> <B.png>`
 
 Try to match two images and display the results (and computed
 similarity scores).
 
-## `./autofairdice.py match-ref <image.png> …`
+## `./autodice.py match-ref <image.png> …`
 
 Match a collection of images against the reference pictures. Output is like this:
 
-      ./autofairdice.py match-ref dataset/*.png
+      ./autodice.py match-ref dataset/*.png
 
       dataset/foo.png 13
       dataset/bar.png 7
