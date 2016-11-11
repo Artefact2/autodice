@@ -1,0 +1,5 @@
+* Reference pictures with a picture of each die face
+* Process (autocrop, edge detect): GIMP batch mode (GMIC) ?
+* OpenCV image similarity (https://stackoverflow.com/questions/11541154/checking-images-for-similarity-with-opencv)
+
+https://photo.stackexchange.com/questions/60546/what-type-of-lens-can-i-add-to-my-webcam-for-closeups-5-20cm-away
