@@ -1,5 +1,13 @@
 #!/usr/bin/env python2
 
+# Author: Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+
+# This program is free software. It comes without any warranty, to the
+# extent permitted by applicable law. You can redistribute it and/or
+# modify it under the terms of the Do What The Fuck You Want To Public
+# License, Version 2, as published by Sam Hocevar. See
+# http://sam.zoy.org/wtfpl/COPYING for more details.
+
 import sys
 import math
 import numpy as np
@@ -61,6 +69,18 @@ def scoreMatches(matches, mask, kp1, w1, h1, kp2, w2, h2):
         
     return score
 
+def scoreCenterDiff(img1, img2, p):
+    h, w, d = img1.shape
+    y1 = int((.5 - p / 2.0) * h)
+    y2 = int((.5 + p / 2.0) * h)
+    x1 = int((.5 - p / 2.0) * w)
+    x2 = int((.5 + p / 2.0) * w)
+
+    s1 = img1[y1:y2,x1:x2].view(dtype=np.int8)
+    s2 = img2[y1:y2,x1:x2].view(dtype=np.int8)
+    
+    return np.linalg.norm(s2 - s1) / ((y2 - y1)*(x2 - x1))
+
 def refmatch(img, refdata):
     kp, des = keypointsAndDescriptors(img)
     
@@ -75,11 +95,15 @@ def refmatch(img, refdata):
         if nInliers <= 10:
             continue
 
-        h1 = refdata[i][1][0]
-        w1 = refdata[i][1][1]
+        h1, w1, d = refdata[i][1].shape
         h2, w2, d = img.shape
+
+        warped = cv2.warpPerspective(refdata[i][1], M, (w2, h2))
         
-        inl.append((scoreMatches(matches, matchesMask, refdata[i][0][0], w1, h1, kp, w2, h2), i))
+        inl.append((
+            scoreMatches(matches, matchesMask, refdata[i][0][0], w1, h1, kp, w2, h2) - 10.0 * scoreCenterDiff(img, warped, .333),
+            i,
+        ))
 
     inl = sorted(inl, reverse = True)
 
@@ -108,6 +132,8 @@ elif sys.argv[1] == "autocrop-test":
     img = cv2.imread(sys.argv[2], -1)
     plt.imshow(cv2.cvtColor(autocrop(img), cv2.COLOR_BGR2RGB))
     plt.show()
+    plt.imshow(cv2.Canny(img, 100, 200), cmap='gray')
+    plt.show()
 
 elif sys.argv[1] == "match-test":
     from matplotlib import pyplot as plt
@@ -124,13 +150,19 @@ elif sys.argv[1] == "match-test":
     matches = matched(des1, des2)
     M, matchesMask, nInliers = findHomographyAndInliers(kp1, kp2, matches)
 
-    print("%d matches, %d inliers, final score %f" % (
-        len(matches), nInliers, scoreMatches(matches, matchesMask, kp1, w1, h2, kp2, w2, h2)
-    ))
-
     if nInliers > 0:
         img4 = cv2.warpPerspective(img1, M, (w2, h2))
         img5 = cv2.addWeighted(img2, .7, img4, .3, 0)
+        cdScore = scoreCenterDiff(img4, img2, .333)
+    else:
+        cdScore = 0.0
+
+    print("%d matches, %d inliers, final scores: (%f, %f)" % (
+        len(matches),
+        nInliers,
+        scoreMatches(matches, matchesMask, kp1, w1, h2, kp2, w2, h2),
+        cdScore,
+    ))
 
     img3 = cv2.drawMatchesKnn(
         img1, kp1, img5, kp2, matches, None,
@@ -152,7 +184,7 @@ elif sys.argv[1] == "match-ref":
         img = cv2.imread(reffile, -1)
         refdata[i] = (
             keypointsAndDescriptors(img),
-            img.shape,
+            img,
         )
 
     for i in xrange(2, len(sys.argv)):
