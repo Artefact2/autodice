@@ -81,6 +81,9 @@ def scoreCenterDiff(img1, img2, p):
     
     return np.linalg.norm(s2 - s1) / ((y2 - y1)*(x2 - x1))
 
+def scoreFinal(sMatch, sCenterDiff):
+    return sMatch - 10.0 * sCenterDiff
+
 def refmatch(img, refdata):
     kp, des = keypointsAndDescriptors(img)
     
@@ -99,11 +102,11 @@ def refmatch(img, refdata):
         h2, w2, d = img.shape
 
         warped = cv2.warpPerspective(refdata[i][1], M, (w2, h2))
+
+        sMatches = scoreMatches(matches, matchesMask, refdata[i][0][0], w1, h1, kp, w2, h2)
+        sCenterDiff = scoreCenterDiff(img, warped, .333)
         
-        inl.append((
-            scoreMatches(matches, matchesMask, refdata[i][0][0], w1, h1, kp, w2, h2) - 10.0 * scoreCenterDiff(img, warped, .333),
-            i,
-        ))
+        inl.append((scoreFinal(sMatches, sCenterDiff), i))
 
     inl = sorted(inl, reverse = True)
 
@@ -117,7 +120,7 @@ def refmatch(img, refdata):
     elif len(inl) > 0:
         return inl[0][1]
     else:
-        return '???'
+        return '?'
 
 if len(sys.argv) == 1:
     usage()
@@ -153,15 +156,18 @@ elif sys.argv[1] == "match-test":
     if nInliers > 0:
         img4 = cv2.warpPerspective(img1, M, (w2, h2))
         img5 = cv2.addWeighted(img2, .7, img4, .3, 0)
-        cdScore = scoreCenterDiff(img4, img2, .333)
+        sCD = scoreCenterDiff(img4, img2, .333)
     else:
-        cdScore = 0.0
+        sCD = 0.0
 
-    print("%d matches, %d inliers, final scores: (%f, %f)" % (
+    sMatches = scoreMatches(matches, matchesMask, kp1, w1, h2, kp2, w2, h2)
+        
+    print("%d matches, %d inliers, final scores: (%f, %f, final %f)" % (
         len(matches),
         nInliers,
-        scoreMatches(matches, matchesMask, kp1, w1, h2, kp2, w2, h2),
-        cdScore,
+        sMatches,
+        sCD,
+        scoreFinal(sMatches, sCD),
     ))
 
     img3 = cv2.drawMatchesKnn(

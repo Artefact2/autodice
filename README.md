@@ -33,7 +33,7 @@ Autocrop an image using Canny edge detection. All images must be
 cropped this way to ensure consistent positioning of the die in the
 picture.
 
-![](./examples/autocrop1.png) | ![](./examples/autocrop2.png) | ![](./examples/autocrop3.png)
+![](./examples/autocrop1.png.jpg) | ![](./examples/autocrop2.png.jpg) | ![](./examples/autocrop3.png.jpg)
 --- | --- | ---
 Original picture | After edge detection | Autocrop result
 
@@ -46,7 +46,21 @@ detection algorithm.
 ## `./autodice.py match-test <A.png> <B.png>`
 
 Try to match two images and display the results (and computed
-similarity scores).
+similarity scores, higher is better).
+
+![](./examples/match1-1.png.jpg) | ![](./examples/match1-2.png.jpg) | ![](./examples/match1-3.png.jpg) | ![](./examples/match1-4.png.jpg) | ![](./examples/match1-5.png.jpg)
+--- | --- | --- | --- | ---
+Picture A | Best homography against B | Picture B | Blend | Matched features (inliers only)
+
+The final score for this match is -2.907422.
+
+![](./examples/match2-1.png.jpg) | ![](./examples/match2-2.png.jpg) | ![](./examples/match2-3.png.jpg) | ![](./examples/match2-4.png.jpg) | ![](./examples/match2-5.png.jpg)
+--- | --- | --- | --- | ---
+Picture A | Best homography against B | Picture B | Blend | Matched features (inliers only)
+
+The final score for this match is -3.919105. Although the match seems
+better, the inliers are penalized because they do not match an overall
+equivalent side (top to side or side to top).
 
 ## `./autodice.py match-ref <image.png> …`
 
@@ -56,7 +70,11 @@ Match a collection of images against the reference pictures. Output is like this
 
       dataset/foo.png 13
       dataset/bar.png 7
-      dataset/baz.png 10
+      dataset/baz.png 10?
+
+If the algorithm is unsure, it will put a question mark after its best
+guess. No question mark does not mean the result is guaranteed to be
+correct, it just means the algorithm is fairly sure to be correct.
 
 This command assumes that the files are correctly named in `ref/` (if
 you are testing a d20, `ref/` should have `1.png`, `2.png`, …,
